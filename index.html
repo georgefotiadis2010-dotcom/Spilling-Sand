@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>AETHERSAND — Next-Gen 2.5D Cellular Physics &amp; Shader Sandbox</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header & Primary Simulation Toolbar -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <span class="logo-orb"></span>
+        </div>
+        <div class="brand-text">
+          <h1>AETHERSAND</h1>
+          <span class="brand-subtitle">2.5D Metaball &bull; PBR &bull; Raymarched GI Sandbox</span>
+        </div>
+      </div>
+
+      <!-- Accessible Single-Tab-Stop Toolbar per modern-web-guidance -->
+      <div
+        id="sim-toolbar"
+        class="sim-toolbar"
+        role="toolbar"
+        focusgroup="toolbar wrap"
+        aria-label="Simulation and graphics controls"
+        aria-controls="stage-container"
+      >
+        <!-- Playback Group -->
+        <div role="group" aria-label="Playback controls" class="toolbar-group">
+          <button
+            type="button"
+            id="btn-play-pause"
+            class="tool-btn"
+            aria-pressed="false"
+            aria-label="Pause simulation"
+            title="Pause / Resume simulation (Space)"
+          >
+            <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></svg>
+            <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5-12-7.5z" fill="currentColor"/></svg>
+            <span class="btn-label">Simulate</span>
+          </button>
+
+          <button
+            type="button"
+            id="btn-step"
+            class="tool-btn"
+            aria-label="Step one frame"
+            title="Advance simulation by 1 frame (.)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l10-7-10-7zm12 0h2v14h-2V5z" fill="currentColor"/></svg>
+          </button>
+
+          <button
+            type="button"
+            id="btn-undo"
+            class="tool-btn"
+            aria-label="Undo last stroke"
+            title="Undo last brush stroke (Z)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z" fill="currentColor"/></svg>
+          </button>
+        </div>
+
+        <span role="separator" aria-orientation="vertical" class="toolbar-sep"></span>
+
+        <!-- Render Mode Group (Mutually Exclusive) -->
+        <div role="group" aria-label="Graphics pipeline mode" class="toolbar-group">
+          <button
+            type="button"
+            class="tool-btn mode-btn"
+            data-render-mode="ultra"
+            aria-pressed="true"
+            aria-label="100x Ultra 2.5D PBR &amp; GI Mode"
+            title="100x Ultra Mode: Smooth Metaballs, 2.5D Normal Mapping, Refraction &amp; Raymarched Global Illumination"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z" fill="currentColor"/></svg>
+            <span class="btn-label">100x Ultra GI</span>
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn mode-btn"
+            data-render-mode="split"
+            aria-pressed="false"
+            aria-label="Split-Screen Comparison: Classic Sandspiel vs 100x Ultra"
+            title="Split-Screen Comparison: Drag slider to compare Classic Pixel Sandspiel vs 100x Ultra Shader Engine"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2v20H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7zm2 0h7a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2h-7V2z" fill="currentColor"/></svg>
+            <span class="btn-label">Split Compare</span>
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn mode-btn"
+            data-render-mode="thermal"
+            aria-pressed="false"
+            aria-label="Thermal &amp; Flow Field Vision"
+            title="Thermal &amp; Aerodynamic Flow Vision"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0zm-3-9a1 1 0 0 1 1 1v3h-2V5a1 1 0 0 1 1-1z" fill="currentColor"/></svg>
+            <span class="btn-label">Thermal</span>
+          </button>
+
+          <button
+            type="button"
+            class="tool-btn mode-btn"
+            data-render-mode="classic"
+            aria-pressed="false"
+            aria-label="Classic 8-Bit Pixel Mode"
+            title="Original Sandspiel Flat Pixel Rendering"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="currentColor"/></svg>
+            <span class="btn-label">Classic Pixels</span>
+          </button>
+        </div>
+
+        <span role="separator" aria-orientation="vertical" class="toolbar-sep"></span>
+
+        <!-- Environment & Ambiance Group -->
+        <div role="group" aria-label="Lighting and world actions" class="toolbar-group">
+          <button
+            type="button"
+            id="btn-lighting-cycle"
+            class="tool-btn"
+            aria-label="Cycle lighting environment"
+            title="Cycle Lighting: Bioluminescent Cavern / Golden Sunset / Studio Daylight"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0-5a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 16a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm9-7v2h-2a1 1 0 1 1 0-2h2zM5 12a1 1 0 0 1-1 1H2v-2h2a1 1 0 0 1 1 1zm13.36-6.36a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 1 1-1.41-1.41l1.41-1.41a1 1 0 0 1 1.41 0zM8.46 16.95a1 1 0 0 1 0 1.41l-1.41 1.41a1 1 0 1 1-1.41-1.41l1.41-1.41a1 1 0 0 1 1.41 0zm10.6 1.41a1 1 0 0 1-1.41 0l-1.41-1.41a1 1 0 1 1 1.41-1.41l1.41 1.41a1 1 0 0 1 0 1.41zM8.46 7.05a1 1 0 0 1-1.41 0L5.64 5.64a1 1 0 0 1 1.41-1.41l1.41 1.41a1 1 0 0 1 0 1.41z" fill="currentColor"/></svg>
+            <span class="btn-label" id="lighting-label">Cavern GI</span>
+          </button>
+
+          <button
+            type="button"
+            id="btn-audio"
+            class="tool-btn"
+            aria-pressed="false"
+            aria-label="Enable spatial audio synthesizer"
+            title="Toggle Procedural Spatial Soundscape (M)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/></svg>
+          </button>
+
+          <button
+            type="button"
+            id="btn-presets"
+            class="tool-btn accent-btn"
+            command="show-modal"
+            commandfor="presets-dialog"
+            aria-label="Open world presets and graphics settings"
+            title="Load Interactive Diorama Worlds &amp; Shader Controls"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z" fill="currentColor"/></svg>
+            <span class="btn-label">Worlds &amp; Shaders</span>
+          </button>
+
+          <button
+            type="button"
+            id="btn-clear"
+            class="tool-btn danger-btn"
+            aria-label="Clear sandbox canvas"
+            title="Clear entire sandbox"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Live region for screen-reader feedback outside toolbar per modern-web-guidance -->
+    <p id="sr-status" role="status" class="sr-only"></p>
+
+    <!-- Main Workspace: Left Brush & Physics Tools + Center WebGL2 Viewport + Right Element Palette -->
+    <main class="workspace">
+      <!-- Left Panel: Brush & Physics Manipulators -->
+      <aside class="side-panel left-panel" aria-label="Brush and physics tools">
+        <div class="panel-section">
+          <h2 class="panel-title">Brush Mode</h2>
+          <div
+            id="tool-mode-bar"
+            role="toolbar"
+            aria-orientation="vertical"
+            focusgroup="toolbar wrap block"
+            aria-label="Brush tool modes"
+            class="vertical-tool-list"
+          >
+            <button type="button" class="v-tool-btn" data-tool="paint" aria-pressed="true" aria-label="Matter Emitter Brush" title="Paint / Pour selected element">
+              <span class="v-tool-icon">✦</span>
+              <span class="v-tool-text">
+                <strong>Matter Brush</strong>
+                <small>Pour or sculpt element</small>
+              </span>
+            </button>
+            <button type="button" class="v-tool-btn" data-tool="wind" aria-pressed="false" aria-label="Vortex &amp; Wind Force" title="Drag to push fluids, bend flames &amp; create vortices">
+              <span class="v-tool-icon">〰</span>
+              <span class="v-tool-text">
+                <strong>Force / Vortex</strong>
+                <small>Push fluids &amp; wind</small>
+              </span>
+            </button>
+            <button type="button" class="v-tool-btn" data-tool="heat" aria-pressed="false" aria-label="Thermal Laser (+2500°C)" title="Superheat matter: melt sand to glass, stone to lava, boil water">
+              <span class="v-tool-icon">☀</span>
+              <span class="v-tool-text">
+                <strong>Thermal Laser</strong>
+                <small>Melt sand &rarr; glass, stone &rarr; lava</small>
+              </span>
+            </button>
+            <button type="button" class="v-tool-btn" data-tool="freeze" aria-pressed="false" aria-label="Cryo Beam (-150°C)" title="Cryo-freeze liquids into crystalline ice &amp; quench lava">
+              <span class="v-tool-icon">❄</span>
+              <span class="v-tool-text">
+                <strong>Cryo Beam</strong>
+                <small>Freeze water &amp; quench magma</small>
+              </span>
+            </button>
+            <button type="button" class="v-tool-btn" data-tool="erase" aria-pressed="false" aria-label="Vacuum Eraser" title="Vaporize matter in brush radius (Right-click anywhere)">
+              <span class="v-tool-icon">◌</span>
+              <span class="v-tool-text">
+                <strong>Vacuum Eraser</strong>
+                <small>Or hold Right-Click</small>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="slider-header">
+            <label for="brush-size">Brush Radius</label>
+            <output id="brush-size-val" for="brush-size">8</output>
+          </div>
+          <input type="range" id="brush-size" min="1" max="32" value="8" class="studio-slider">
+          <div class="size-presets" role="group" aria-label="Quick brush sizes">
+            <button type="button" class="chip-btn" data-size="2">Fine</button>
+            <button type="button" class="chip-btn" data-size="6">Med</button>
+            <button type="button" class="chip-btn" data-size="14">Large</button>
+            <button type="button" class="chip-btn" data-size="26">Mega</button>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="slider-header">
+            <label for="gravity-slider">Gravity</label>
+            <output id="gravity-val" for="gravity-slider">1.0G</output>
+          </div>
+          <input type="range" id="gravity-slider" min="-1" max="2" step="0.25" value="1" class="studio-slider">
+
+          <div class="slider-header" style="margin-top: 0.65rem;">
+            <label for="gi-intensity">GI Radiance &amp; Bloom</label>
+            <output id="gi-intensity-val" for="gi-intensity">125%</output>
+          </div>
+          <input type="range" id="gi-intensity" min="20" max="220" value="125" class="studio-slider">
+        </div>
+
+        <!-- Live Element Inspector Card -->
+        <div class="panel-section inspector-card" aria-live="polite">
+          <div class="inspector-header">
+            <span class="inspector-swatch" id="active-mat-swatch"></span>
+            <div>
+              <h3 id="active-mat-name">Water</h3>
+              <span class="inspector-category" id="active-mat-tag">Refractive Metaball Fluid</span>
+            </div>
+          </div>
+          <p id="active-mat-desc" class="inspector-desc">
+            Continuous isosurface fluid with surface tension, meniscus foam, underwater caustics, refraction, and freezing/boiling phase transitions.
+          </p>
+          <div class="probe-telemetry" id="cursor-probe">
+            <div class="probe-item">
+              <span class="probe-label">Probe</span>
+              <span class="probe-value" id="probe-element">Air</span>
+            </div>
+            <div class="probe-item">
+              <span class="probe-label">Temp</span>
+              <span class="probe-value" id="probe-temp">22°C</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Viewport: Multi-Pass WebGL2 Stage + Vector Sub-Pixel Overlay -->
+      <section class="stage-wrapper" id="stage-container" aria-label="Interactive physics viewport">
+        <div class="canvas-frame" id="canvas-frame">
+          <!-- WebGL2 Deferred Metaball / Normal-Mapped PBR / Raymarched GI Canvas -->
+          <canvas id="gl-canvas"></canvas>
+          <!-- High-DPI 2D Overlay for Sub-Pixel Sparks, Lightning Arcs, Refractive Bubbles, Botanical Petals & Brush Cursor -->
+          <canvas id="fx-canvas"></canvas>
+
+          <!-- Interactive Split-Screen Wipe Handle (shown in Split Compare mode) -->
+          <div id="split-handle" class="split-handle" hidden>
+            <div class="split-line"></div>
+            <div class="split-pill">
+              <span class="split-tag-left">CLASSIC PIXELS</span>
+              <span class="split-grip">⇄</span>
+              <span class="split-tag-right">100x ULTRA GI</span>
+            </div>
+          </div>
+
+          <!-- Top-Left Floating Telemetry Pill -->
+          <div class="stage-hud">
+            <span class="hud-badge"><strong id="hud-fps">60</strong> FPS</span>
+            <span class="hud-sep">&bull;</span>
+            <span class="hud-badge"><strong id="hud-cells">0</strong> Active Cells</span>
+            <span class="hud-sep">&bull;</span>
+            <span class="hud-badge" id="hud-pipeline">WebGL2 2.5D PBR + Raymarched GI</span>
+          </div>
+
+          <!-- Bottom Floating Quick World Switcher Bar -->
+          <div class="quick-worlds-bar" role="group" aria-label="Quick diorama worlds">
+            <span class="quick-worlds-label">Dioramas:</span>
+            <button type="button" class="world-pill active" data-preset="cavern">Magma &amp; Bioluminescent Cavern</button>
+            <button type="button" class="world-pill" data-preset="lagoon">Crystal Lagoon &amp; Terrarium</button>
+            <button type="button" class="world-pill" data-preset="alchemy">Alchemist's Reactor</button>
+            <button type="button" class="world-pill" data-preset="storm">Thunderstorm &amp; Glass Dunes</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: 22-Element Material Palette -->
+      <aside class="side-panel right-panel" aria-label="Element palette">
+        <div class="palette-scroll" id="material-palette">
+          <!-- Populated dynamically from materials.js with semantic role="group" categories -->
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Native Modal Dialog for World Presets & Graphics Pipeline Breakdown (modern-web-guidance compliant) -->
+  <dialog id="presets-dialog" closedby="any" aria-labelledby="dialog-title">
+    <div class="dialog-header">
+      <div>
+        <h2 id="dialog-title">Interactive Diorama Worlds &amp; 100x Graphics Architecture</h2>
+        <p class="dialog-subtitle">Choose a sculpted physics diorama or inspect the multi-pass shader pipeline</p>
+      </div>
+      <form method="dialog">
+        <button value="close" class="dialog-close-btn" aria-label="Close dialog" autofocus>&times;</button>
+      </form>
+    </div>
+
+    <div class="dialog-body">
+      <h3 class="section-heading">Sculpted Physics Dioramas</h3>
+      <div class="preset-grid">
+        <button type="button" class="preset-card" data-load-preset="cavern">
+          <div class="preset-preview preview-cavern"></div>
+          <div class="preset-info">
+            <h4>Magma &amp; Bioluminescent Cavern</h4>
+            <p>Sculpted basalt arches, cascading refractive waterfall, glowing magma chamber, and cyan bioluminescent mycelium.</p>
+          </div>
+        </button>
+
+        <button type="button" class="preset-card" data-load-preset="lagoon">
+          <div class="preset-preview preview-lagoon"></div>
+          <div class="preset-info">
+            <h4>Crystal Lagoon &amp; Botanical Terrarium</h4>
+            <p>Hanging glass terrarium with blooming flora, golden silica dunes, floating oil slick, ice shelves, and roaming mites.</p>
+          </div>
+        </button>
+
+        <button type="button" class="preset-card" data-load-preset="alchemy">
+          <div class="preset-preview preview-alchemy"></div>
+          <div class="preset-info">
+            <h4>Alchemist's Reactor &amp; Cloner Forge</h4>
+            <p>Runic cloner emitters feeding acid vats, conductive gold conduits, gunpowder chambers, and molten glass blowers.</p>
+          </div>
+        </button>
+
+        <button type="button" class="preset-card" data-load-preset="storm">
+          <div class="preset-preview preview-storm"></div>
+          <div class="preset-info">
+            <h4>Thunderstorm &amp; Fulgurite Glass Dunes</h4>
+            <p>High-voltage lightning arcs striking desert sand dunes, vitrifying silica into refractive glass on impact.</p>
+          </div>
+        </button>
+      </div>
+
+      <h3 class="section-heading" style="margin-top: 1.25rem;">Why It Looks 100x Better Than Particle Sandboxes</h3>
+      <div class="pipeline-toggles">
+        <label class="toggle-card">
+          <input type="checkbox" id="chk-metaballs" checked>
+          <div>
+            <strong>Smooth Metaball Fluid Isosurfaces</strong>
+            <span>Extracts continuous curved liquid boundaries, meniscus foam &amp; surface normals instead of blocky pixels</span>
+          </div>
+        </label>
+        <label class="toggle-card">
+          <input type="checkbox" id="chk-gi" checked>
+          <div>
+            <strong>2D Raymarched Global Illumination &amp; Shadows</strong>
+            <span>Lava, fire, acid, lightning &amp; fungus cast real-time raymarched soft shadows &amp; colored bounce light</span>
+          </div>
+        </label>
+        <label class="toggle-card">
+          <input type="checkbox" id="chk-refraction" checked>
+          <div>
+            <strong>2.5D Relief Normal Mapping &amp; Caustic Refraction</strong>
+            <span>Sculpted 3D bas-relief bevels, procedural rock/wood/ice micro-facets, and underwater Voronoi caustics</span>
+          </div>
+        </label>
+        <label class="toggle-card">
+          <input type="checkbox" id="chk-subpixel" checked>
+          <div>
+            <strong>Sub-Pixel Continuum Overlays</strong>
+            <span>Vector lightning bolts, motion-blurred ember trails, refractive rising bubbles, and swaying botanical leaves</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <form method="dialog" class="dialog-footer">
+      <button value="close" class="primary-btn">Return to Sandbox</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
